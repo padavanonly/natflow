@@ -171,36 +171,57 @@ static struct natflow_offload *natflow_offload_alloc(struct nf_conn *ct, natflow
 	dir = 0;
 	ft = &flow->tuplehash[dir].tuple;
 	ctt = &ct->tuplehash[dir].tuple;
-	ft->src_v4 = ctt->src.u3.in;
-	ft->dst_v4 = ctt->dst.u3.in;
 	ft->l3proto = ctt->src.l3num;
 	ft->l4proto = ctt->dst.protonum;
 	ft->src_port = ctt->src.u.tcp.port;
 	ft->dst_port = ctt->dst.u.tcp.port;
-
-	orig_hash = natflow_hash_v4(ft->src_v4.s_addr, ft->dst_v4.s_addr, ft->src_port, ft->dst_port, ft->l4proto);
-	nfn = &natflow_fast_nat_table[orig_hash];
-	if (nfn->saddr != ft->src_v4.s_addr || nfn->daddr != ft->dst_v4.s_addr || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
+	
+	switch (ctt->src.l3num) {
+	case NFPROTO_IPV4:
+		ft->src_v4 = ctt->src.u3.in;
+		ft->dst_v4 = ctt->dst.u3.in;
+		orig_hash = natflow_hash_v4(ft->src_v4.s_addr, ft->dst_v4.s_addr, ft->src_port, ft->dst_port, ft->l3proto);
+		nfn = &natflow_fast_nat_table[orig_hash];
+		if (nfn->saddr != ft->src_v4.s_addr || nfn->daddr != ft->dst_v4.s_addr || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
 	{
 		orig_hash += 1;
 	}
-
+	case NFPROTO_IPV6:
+		ft->src_v6 = ctt->src.u3.in6;
+		ft->dst_v6 = ctt->dst.u3.in6;
+		orig_hash = natflow_hash_v4(ft->src_v6.s6_addr32, ft->dst_v6.s6_addr32, ft->src_port, ft->dst_port, ft->l3proto);
+		nfn = &natflow_fast_nat_table[orig_hash];
+		if (nfn->saddr != ft->src_v6.s6_addr32 || nfn->daddr != dst_v6.s6_addr32 || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
+	{
+		orig_hash += 1;
+	}
 	dir = 1;
 	ft = &flow->tuplehash[dir].tuple;
 	ctt = &ct->tuplehash[dir].tuple;
-	ft->src_v4 = ctt->src.u3.in;
-	ft->dst_v4 = ctt->dst.u3.in;
 	ft->l3proto = ctt->src.l3num;
 	ft->l4proto = ctt->dst.protonum;
 	ft->src_port = ctt->src.u.tcp.port;
 	ft->dst_port = ctt->dst.u.tcp.port;
-
-	reply_hash = natflow_hash_v4(ft->src_v4.s_addr, ft->dst_v4.s_addr, ft->src_port, ft->dst_port, ft->l4proto);
-	nfn = &natflow_fast_nat_table[reply_hash];
-	if (nfn->saddr != ft->src_v4.s_addr || nfn->daddr != ft->dst_v4.s_addr || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
+	switch (ctt->src.l3num)   {
+	case NFPROTO_IPV4:
+		ft->src_v4 = ctt->src.u3.in;
+		ft->dst_v4 = ctt->dst.u3.in;
+		reply_hash = natflow_hash_v4(ft->src_v4.s_addr, ft->dst_v4.s_addr, ft->src_port, ft->dst_port, ft->l3proto);
+		nfn = &natflow_fast_nat_table[reply_hash];
+		if (nfn->saddr != ft->src_v4.s_addr || nfn->daddr != ft->dst_v4.s_addr || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
 	{
-		reply_hash += 1;
+		orig_hash += 1;
 	}
+	case NFPROTO_IPV6:
+		ft->src_v6 = ctt->src.u3.in6;
+		ft->dst_v6 = ctt->dst.u3.in6;
+		reply_hash = natflow_hash_v4(ft->src_v6.s6_addr32, ft->dst_v6.s6_addr32, ft->src_port, ft->dst_port, ft->l3proto);
+		nfn = &natflow_fast_nat_table[reply_hash];
+		if (nfn->saddr != ft->src_v6.s6_addr32 || nfn->daddr != dst_v6.s6_addr32 || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
+	{
+		orig_hash += 1;
+	}
+				}
 
 	/*XXX: in fact ppe don't care flags  */
 	flow->flags = 0;
