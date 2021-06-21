@@ -210,7 +210,7 @@ static struct natflow_offload *natflow_offload_alloc(struct nf_conn *ct, natflow
 		nfn = &natflow_fast_nat_table[reply_hash];
 		if (nfn->saddr != ft->src_v4.s_addr || nfn->daddr != ft->dst_v4.s_addr || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
 	{
-		orig_hash += 1;
+		reply_hash += 1;
 	}
 	case NFPROTO_IPV6:
 		ft->src_v6 = ctt->src.u3.in6;
@@ -219,7 +219,7 @@ static struct natflow_offload *natflow_offload_alloc(struct nf_conn *ct, natflow
 		nfn = &natflow_fast_nat_table[reply_hash];
 		if (nfn->saddr != ft->src_v6.s6_addr32 || nfn->daddr != dst_v6.s6_addr32 || nfn->source != ft->src_port || nfn->dest != ft->dst_port || nfn->protonum != ft->l4proto)
 	{
-		orig_hash += 1;
+		reply_hash += 1;
 	}
 				}
 
